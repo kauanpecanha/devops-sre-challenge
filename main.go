@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"errors"
+	"kauanpecanha/devops-challenge/db"
 	"kauanpecanha/devops-challenge/otel"
 	"kauanpecanha/devops-challenge/routes"
 	"log"
@@ -24,6 +25,9 @@ func main() {
 func run() (err error) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	// mongodb connection
+	db.ConnectMongo()
 
 	// Set up OpenTelemetry.
 	otelShutdown, err := otel.SetupOTelSDK(ctx)
