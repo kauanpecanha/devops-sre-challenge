@@ -1,4 +1,4 @@
-package main
+package handlers
 
 // boilerplate incomming from opentelemetry documentation at https://opentelemetry.io/docs/languages/go/getting-started/
 
@@ -37,7 +37,7 @@ func init() {
 }
 
 // rolldice feature
-func rolldice(w http.ResponseWriter, r *http.Request) {
+func Rolldice(w http.ResponseWriter, r *http.Request) {
 	ctx, span := tracer.Start(r.Context(), "roll")
 	defer span.End()
 
