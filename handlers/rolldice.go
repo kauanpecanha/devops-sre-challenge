@@ -3,16 +3,17 @@ package handlers
 // boilerplate incomming from opentelemetry documentation at https://opentelemetry.io/docs/languages/go/getting-started/
 
 import (
-	"fmt"
-	"io"
-	"log"
+	"kauanpecanha/devops-challenge/db"
+	"kauanpecanha/devops-challenge/models"
 	"math/rand"
 	"net/http"
-	"strconv"
+	"time"
 
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -36,29 +37,117 @@ func init() {
 	}
 }
 
-// rolldice feature
-func Rolldice(w http.ResponseWriter, r *http.Request) {
-	ctx, span := tracer.Start(r.Context(), "roll")
+func Play(c *gin.Context) {
+	ctx, span := tracer.Start(c, "play")
 	defer span.End()
 
-	roll := 1 + rand.Intn(6)
+	player := c.Param("player")
 
-	var msg string
-	if player := r.PathValue("player"); player != "" {
-		// known player's play
-		msg = fmt.Sprintf("%s is rolling the dice", player)
-	} else {
-		// unknown player's play
-		msg = "Anonymous player is rolling the dice"
+	roll := models.Roll{
+		ID:        primitive.NewObjectID(),
+		Player:    player,
+		Result:    1 + rand.Intn(6),
+		Timestamp: time.Now(),
 	}
-	logger.InfoContext(ctx, msg, "result", roll)
 
-	rollValueAttr := attribute.Int("roll.value", roll)
-	span.SetAttributes(rollValueAttr)
-	rollCnt.Add(ctx, 1, metric.WithAttributes(rollValueAttr))
-
-	resp := strconv.Itoa(roll) + "\n"
-	if _, err := io.WriteString(w, resp); err != nil {
-		log.Printf("Write failed: %v\n", err)
+	_, err := db.RollsCollection.InsertOne(ctx, roll)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar no MongoDB"})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"player":    roll.Player,
+		"result":    roll.Result,
+		"timestamp": roll.Timestamp,
+	})
+}
+
+func GetAllPlays(c *gin.Context) {
+	ctx, span := tracer.Start(c.Request.Context(), "GetAllPlays")
+	defer span.End()
+
+	cursor, err := db.RollsCollection.Find(ctx, bson.M{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar rolls"})
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var rolls []models.Roll
+	if err := cursor.All(ctx, &rolls); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao decodificar rolls"})
+		return
+	}
+
+	c.JSON(http.StatusOK, rolls)
+}
+
+func GetPlayByID(c *gin.Context) {
+	ctx, span := tracer.Start(c.Request.Context(), "GetPlayByID")
+	defer span.End()
+
+	idParam := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	var roll models.Roll
+	err = db.RollsCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&roll)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Roll não encontrado"})
+		return
+	}
+
+	c.JSON(http.StatusOK, roll)
+}
+
+func UpdatePlay(c *gin.Context) {
+	ctx, span := tracer.Start(c.Request.Context(), "UpdatePlay")
+	defer span.End()
+
+	id := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	var roll models.Roll
+	if err := c.ShouldBindJSON(&roll); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, err = db.RollsCollection.UpdateOne(ctx,
+		bson.M{"_id": objID},
+		bson.M{"$set": bson.M{"result": roll.Result, "timestamp": time.Now()}},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Atualizado com sucesso"})
+}
+
+func DeletePlay(c *gin.Context) {
+	ctx, span := tracer.Start(c.Request.Context(), "DeletePlay")
+	defer span.End()
+
+	idParam := c.Param("id")
+	objID, err := primitive.ObjectIDFromHex(idParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	_, err = db.RollsCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao deletar roll"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Roll deletado com sucesso"})
 }

@@ -10,24 +10,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var Client *mongo.Client
+var MongoClient *mongo.Client
+var RollsCollection *mongo.Collection
 
 func ConnectMongo() {
-	uri := "mongodb://root:root@localhost:27017"
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	uri := "mongodb://root:root@localhost:27017"
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal("Erro conectando ao MongoDB:", err)
+		log.Fatalf("Erro ao conectar no MongoDB: %v", err)
 	}
 
-	// Testa a conexão
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatal("Erro ao pingar MongoDB:", err)
+	if err := client.Ping(ctx, nil); err != nil {
+		log.Fatalf("Erro ao pingar MongoDB: %v", err)
 	}
 
 	fmt.Println("✅ Conectado ao MongoDB")
-	Client = client
+	MongoClient = client
+	RollsCollection = client.Database("rolldice").Collection("rolls")
 }
