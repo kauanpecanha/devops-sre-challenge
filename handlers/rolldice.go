@@ -43,6 +43,10 @@ func Play(c *gin.Context) {
 
 	player := c.Param("player")
 
+	if player == "" {
+		player = "Anonymous Player"
+	}
+
 	roll := models.Roll{
 		ID:        primitive.NewObjectID(),
 		Player:    player,
@@ -61,6 +65,7 @@ func Play(c *gin.Context) {
 		"result":    roll.Result,
 		"timestamp": roll.Timestamp,
 	})
+
 }
 
 func GetAllPlays(c *gin.Context) {
@@ -74,7 +79,7 @@ func GetAllPlays(c *gin.Context) {
 	}
 	defer cursor.Close(ctx)
 
-	var rolls []models.Roll
+	rolls := make([]models.Roll, 0)
 	if err := cursor.All(ctx, &rolls); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao decodificar rolls"})
 		return
@@ -150,4 +155,8 @@ func DeletePlay(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Roll deletado com sucesso"})
+}
+
+func WelcomeHome(context *gin.Context) {
+	context.String(http.StatusOK, "Hello, World!")
 }
