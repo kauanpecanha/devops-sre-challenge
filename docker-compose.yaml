@@ -4,10 +4,9 @@ services:
     container_name: mongo
     restart: always
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
+      - ${MONGO_PORT}:${MONGO_PORT}
+    env_file:
+      - .env
     volumes:
       - mongo_data:/data/db
 
@@ -16,13 +15,31 @@ services:
     container_name: mongo-express
     restart: always
     ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: root
-      ME_CONFIG_MONGODB_SERVER: mongo
+      - ${ME_PORT}:${ME_PORT}
+    env_file:
+      - .env
     depends_on:
       - mongo
+
+#  otel-collector:
+#    image: otel/opentelemetry-collector-contrib:latest
+#    command: ["--config=/etc/otel-collector-config.yaml"]
+#    volumes:
+#      - ./configs/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+#    ports:
+#      - "4317:4317" # OTLP gRPC receiver
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - ${JAEGER_PORT}:${JAEGER_PORT_TCP} # TCP port for Jaeger agent
+      - ${JAEGER_UI_PORT}:${JAEGER_UI_PORT} # Web UI
+      - ${JAEGER_HTTP_PORT}:${JAEGER_HTTP_PORT} # HTTP port for spans
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./configs/prometheus/setup.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - ${PROMETHEUS_PORT}:${PROMETHEUS_PORT}
 
 volumes:
   mongo_data:

@@ -5,8 +5,8 @@ package main
 import (
 	"context"
 	"errors"
+	"kauanpecanha/devops-challenge/configs/otel"
 	"kauanpecanha/devops-challenge/db"
-	"kauanpecanha/devops-challenge/otel"
 	"kauanpecanha/devops-challenge/routes"
 	"log"
 	"net"
