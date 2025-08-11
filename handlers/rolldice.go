@@ -17,7 +17,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-const name = "go.opentelemetry.io/otel/example/dice"
+const name = "ROLLDICE"
 
 // opentelemetry integration within the rolldice feature
 var (
@@ -120,21 +120,20 @@ func UpdatePlay(c *gin.Context) {
 		return
 	}
 
-	var roll models.Roll
-	if err := c.ShouldBindJSON(&roll); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	newResult := 1 + rand.Intn(6)
 
 	_, err = db.RollsCollection.UpdateOne(ctx,
 		bson.M{"_id": objID},
-		bson.M{"$set": bson.M{"result": roll.Result, "timestamp": time.Now()}},
+		bson.M{"$set": bson.M{"result": newResult, "timestamp": time.Now()}},
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Atualizado com sucesso"})
+
+	var roll models.Roll
+	err = db.RollsCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&roll)
+	c.JSON(http.StatusOK, gin.H{"message": "Atualizado com sucesso", "data": gin.H{"result": roll}})
 }
 
 func DeletePlay(c *gin.Context) {

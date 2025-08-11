@@ -5,12 +5,14 @@ package otel
 import (
 	"context"
 	"errors"
+	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/log"
@@ -45,7 +47,7 @@ func SetupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTextMapPropagator(prop)
 
 	// Set up trace provider.
-	tracerProvider, err := newTracerProvider()
+	tracerProvider, err := NewTracerProvider()
 	if err != nil {
 		handleErr(err)
 		return
@@ -81,18 +83,22 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTracerProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
+func NewTracerProvider() (*trace.TracerProvider, error) {
+	godotenv.Load(".env")
+
+	traceExporter, err := jaeger.New(
+		jaeger.WithCollectorEndpoint(
+			jaeger.WithEndpoint(os.Getenv("JAEGER_ENDPOINT")),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	tracerProvider := trace.NewTracerProvider(
-		trace.WithBatcher(traceExporter,
-			// Default is 5s. Set to 1s for demonstrative purposes.
-			trace.WithBatchTimeout(time.Second)),
+		trace.WithBatcher(traceExporter, trace.WithBatchTimeout(time.Second)),
 	)
+
 	return tracerProvider, nil
 }
 

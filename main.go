@@ -4,67 +4,49 @@ package main
 
 import (
 	"context"
-	"errors"
-	"kauanpecanha/devops-challenge/configs/otel"
 	"kauanpecanha/devops-challenge/db"
 	"kauanpecanha/devops-challenge/routes"
-	"log"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
-	"time"
+
+	//"kauanpecanha/devops-challenge/configs/otel"
+	"log"
+
+	"github.com/joho/godotenv"
+
+	"github.com/blackhorseya/golang-101/pkg/otelx"
 )
 
 func main() {
-	if err := run(); err != nil {
-		log.Fatalln(err)
-	}
-}
+	// environment variables loading
+	godotenv.Load(".env")
 
-func run() (err error) {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	_, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	// mongodb connection
 	db.ConnectMongo()
 
-	// Set up OpenTelemetry.
-	otelShutdown, err := otel.SetupOTelSDK(ctx)
+	// workflow name definition
+	//name := os.Getenv("WORKFLOW_NAME")
+	const name = "ROLLDICE"
+	// otelcollector connection string definition
+	//otelcollectorConn := os.Getenv("OTEL_COLLECTOR_CONN")
+	const otelcollectorConn = "localhost:4317"
+
+	// OpenTelemetry initializing
+	err := otelx.SetupOTelSDK(context.Background(), otelcollectorConn, name)
 	if err != nil {
+		log.Printf("Failed to initialize OpenTelemetry: %v", err)
 		return
 	}
-
-	// Handle shutdown properly so nothing leaks.
 	defer func() {
-		err = errors.Join(err, otelShutdown(context.Background()))
+		err = otelx.Shutdown(context.Background())
+		if err != nil {
+			log.Printf("Failed to shutdown OpenTelemetry: %v", err)
+		}
 	}()
 
-	// Start HTTP server.
-	srv := &http.Server{
-		Addr:         ":8080",
-		BaseContext:  func(_ net.Listener) context.Context { return ctx },
-		ReadTimeout:  time.Second,
-		WriteTimeout: 10 * time.Second,
-		Handler:      routes.NewHTTPHandler(),
-	}
-	srvErr := make(chan error, 1)
-	go func() {
-		srvErr <- srv.ListenAndServe()
-	}()
+	routes.NewHTTPHandler(name)
 
-	// Wait for interruption.
-	select {
-	case err = <-srvErr:
-		// Error when starting HTTP server.
-		return
-	case <-ctx.Done():
-		// Wait for first CTRL+C.
-		// Stop receiving signal notifications as soon as possible.
-		stop()
-	}
-
-	// When Shutdown is called, ListenAndServe immediately returns ErrServerClosed.
-	err = srv.Shutdown(context.Background())
-	return
 }
