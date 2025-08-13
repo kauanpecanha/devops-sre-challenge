@@ -33,5 +33,4 @@ service:
         - otlp
       processors: [ ]
       exporters:
-        - prometheus
         - debug

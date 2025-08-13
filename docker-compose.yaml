@@ -30,19 +30,12 @@ services:
       - "4317:4317"
     depends_on:
       - jaeger
-      - prometheus
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
       - ${JAEGER_PORT}:${JAEGER_PORT_TCP} # TCP port for Jaeger agent
       - ${JAEGER_UI_PORT}:${JAEGER_UI_PORT} # Web UI
       - ${JAEGER_HTTP_PORT}:${JAEGER_HTTP_PORT} # HTTP port for spans
-  prometheus:
-    image: prom/prometheus:latest
-    volumes:
-      - ./configs/prometheus/setup.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - ${PROMETHEUS_PORT}:${PROMETHEUS_PORT}
 
 volumes:
   mongo_data:
