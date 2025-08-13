@@ -8,6 +8,11 @@ Este projeto foi desenvolvido com as seguintes tecnologias:
 - docker
 - mongodb
 - opentelemetry
+- jaeger
+
+## 📦 Arquitetura da Aplicação
+
+![Arquitetura do software](images/software-architecture.png)
 
 ## 📦 Instalação
 
@@ -17,31 +22,26 @@ Este projeto foi desenvolvido com as seguintes tecnologias:
 git clone https://github.com/kauanpecanha/devops-sre-challenge.git
 ```
 
-## 📖 Comandos utilizados
+2. Instale as dependências:
 
-criação do pacote
 ```bash
-go mod init kauanpecanha/devops-challenge
+go get .
 ```
 
-adição de dependências do opentelemetry
+3. Se Windows, abra o Docker Desktop. Se Linux, garanta que o serviço do Docker esteja ativo. 
+
+4. Suba os containers do MongoDB, Mongo Express, OpenTelemetry, Prometheus e Jaeger
 ```bash
-go get "go.opentelemetry.io/otel" \
-  "go.opentelemetry.io/otel/exporters/stdout/stdoutmetric" \
-  "go.opentelemetry.io/otel/exporters/stdout/stdouttrace" \
-  "go.opentelemetry.io/otel/exporters/stdout/stdoutlog" \
-  "go.opentelemetry.io/otel/sdk/log" \
-  "go.opentelemetry.io/otel/log/global" \
-  "go.opentelemetry.io/otel/propagation" \
-  "go.opentelemetry.io/otel/sdk/metric" \
-  "go.opentelemetry.io/otel/sdk/resource" \
-  "go.opentelemetry.io/otel/sdk/trace" \
-  "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"\
-  "go.opentelemetry.io/contrib/bridges/otelslog"
+docker-compose up -d
 ```
 
-rodando o projeto
+5. Inicie a aplicação
 ```bash
-export OTEL_RESOURCE_ATTRIBUTES="service.name=dice,service.version=0.1.0"
 go run .
 ```
+
+6. Utilize o Insomnia/Postman para efetuar as operações de CRUD. Elas podem ser efetuadas conforme o arquivo yaml que se encontra em insomnia\Insomnia_2025-08-12.yaml
+
+7. Acesse as URLs abaixo para mais informações relacionadas ao escopo do projeto:
+   - http://localhost:8081/ (página de administração do mongodb de credenciais admin/pass
+   - http://localhost:16686/ (página de monitoramento de traces)

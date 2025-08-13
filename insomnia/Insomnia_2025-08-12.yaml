@@ -1,0 +1,105 @@
+type: collection.insomnia.rest/5.0
+name: SRE DEVOPS CHALLENGE
+meta:
+  id: wrk_2104227f1e12469fa05049b4fa09482e
+  created: 1710719775501
+  modified: 1755045327923
+  description: ""
+collection:
+  - url: http://localhost:8080/roll/Matheus
+    name: POST A NEW ROLLDICE PLAY
+    meta:
+      id: req_1916231102624e67a8b30bece3e8ef30
+      created: 1754853550729
+      modified: 1755045223066
+      isPrivate: false
+      description: ""
+      sortKey: -1754853550729
+    method: POST
+    headers:
+      - name: User-Agent
+        value: insomnia/10.3.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8080/roll/
+    name: GET ALL ROLLDICES PLAYS
+    meta:
+      id: req_08f6691ae7b04e4399d7ed3bd708214b
+      created: 1754869983965
+      modified: 1755045213177
+      isPrivate: false
+      description: ""
+      sortKey: -1754869983965
+    method: GET
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8080/roll/689bda4e6895dafdb7d441a
+    name: DELETE A ROLLDICE PLAY BY ID
+    meta:
+      id: req_f7f0c01230fd48f4bb650ce71cf47a4f
+      created: 1754870006754
+      modified: 1755045235947
+      isPrivate: false
+      description: ""
+      sortKey: -1754853550629
+    method: DELETE
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: http://localhost:8080/roll/6898f10918f93a9ab6e41193
+    name: PUT A ROLLDICE PLAY BY ID
+    meta:
+      id: req_3ba95c4b53dd42b6a4d6c0718d3f0fb3
+      created: 1754870044608
+      modified: 1755045245828
+      isPrivate: false
+      description: ""
+      sortKey: -1754853550529
+    method: PUT
+    headers:
+      - name: User-Agent
+        value: insomnia/11.4.0
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_e6e8cea88bcc344e8192bd81d9160574f8433cf5
+    created: 1754853545188
+    modified: 1754853545188
+environments:
+  name: Base Environment
+  meta:
+    id: env_e6e8cea88bcc344e8192bd81d9160574f8433cf5
+    created: 1710719775505
+    modified: 1754853545172
+    isPrivate: false
