@@ -30,7 +30,7 @@ go get .
 
 3. Se Windows, abra o Docker Desktop. Se Linux, garanta que o serviço do Docker esteja ativo. 
 
-4. Suba os containers do MongoDB, Mongo Express, OpenTelemetry, Prometheus e Jaeger
+4. Suba os containers do MongoDB, Mongo Express, OpenTelemetry e Jaeger
 ```bash
 docker-compose up -d
 ```
